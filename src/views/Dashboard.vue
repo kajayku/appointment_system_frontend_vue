@@ -1,9 +1,18 @@
 <template>
     <div class="container mt-5">
-        <h2>Welcome, {{ authStore.user?.name }}</h2>
+        <h4>Dashboard</h4>
+        <!-- Header -->
+        <nav class="navbar p-3" style="background-color: #f8f9fa;">
+            <div class="container-fluid d-flex justify-content-between">
+                <span class="navbar-brand"></span>
+                <button class="btn btn-secondary" @click="logout">Logout</button>
+            </div>
+        </nav>
+    <div>
+        <span>Welcome, {{ authStore.user?.name }}</span>
 
         <div class="d-flex justify-content-between align-items-center">
-            <h4>My Appointments</h4>
+            <span class="navbar-brand">My Appointments</span>
             <button class="btn btn-primary" @click="showModal = true">+ Book Appointment</button>
         </div>
 
@@ -13,6 +22,7 @@
                     <th>Title</th>
                     <th>Description</th>
                     <th>Date & Time</th>
+                     <th>Status</th>
                     <th>Guests</th>
                     <th>Actions</th>
                 </tr>
@@ -22,6 +32,7 @@
                     <td>{{ appointment.title }}</td>
                     <td>{{ appointment.description }}</td>
                     <td>{{ formatDate(appointment.appointment_date) }}</td>
+                    <td>{{ appointment.status }}</td>
                     <td>{{ appointment.guests.map(guest => guest.email).join(', ') }}</td>
                     <td>
                         <button class="btn btn-danger btn-sm" @click="cancelAppointment(appointment.id)">Cancel</button>
@@ -29,7 +40,7 @@
                 </tr>
             </tbody>
         </table>
-
+        
         <!-- Booking Modal -->
         <div v-if="showModal" class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.5);">
             <div class="modal-dialog">
@@ -76,6 +87,7 @@
             </div>
         </div>
         <!-- End Booking Modal -->
+    </div>
     </div>
 </template>
 
@@ -149,9 +161,26 @@ const cancelAppointment = async (id) => {
     }
 };
 
+const logout = () => {
+    authStore.logout();
+    router.push('/login');
+};
+
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
 };
 
 onMounted(fetchAppointments);
 </script>
+
+
+<!-- <style scoped>
+.navbar {
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+</style> -->
+
