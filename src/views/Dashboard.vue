@@ -35,8 +35,7 @@
                     <td>{{ appointment.status }}</td>
                     <td>{{ appointment.guests.map(guest => guest.email).join(', ') }}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" @click="cancelAppointment(appointment.id)">Cancel</button>
-                    </td>
+                <button class="btn btn-danger btn-sm" @click="openCancelModal(appointment.id)">Cancel</button></td>
                 </tr>
             </tbody>
         </table>
@@ -87,6 +86,26 @@
             </div>
         </div>
         <!-- End Booking Modal -->
+
+          <!-- Cancel Confirmation Modal -->
+        <div v-if="showCancelModal" class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cancel Appointment</h5>
+                        <button type="button" class="btn-close" @click="showCancelModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to cancel this appointment?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="showCancelModal = false">No</button>
+                        <button type="button" class="btn btn-danger" @click="cancelAppointment">Yes, Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Cancel Confirmation Modal -->
     </div>
     </div>
 </template>
@@ -96,6 +115,7 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../store/auth';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -105,6 +125,9 @@ const description = ref('');
 const datetime = ref('');
 const guests = ref('');
 const appointments = ref([]);
+
+const showCancelModal = ref(false);
+const appointmentToCancel = ref(null);
 
 const timezone = ref('Asia/Kolkata'); 
 const reminder_time = ref(60); 
@@ -150,16 +173,55 @@ const bookAppointment = async () => {
     }
 };
 
-const cancelAppointment = async (id) => {
+
+// Open the cancel confirmation modal
+const openCancelModal = (id) => {
+    appointmentToCancel.value = id;
+
+    // Show SweetAlert confirmation popup
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, cancel it!"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await cancelAppointment();
+        }
+    });
+};
+
+const cancelAppointment = async () => {
+    if (!appointmentToCancel.value) return;
+
     try {
-        await axios.delete(`http://127.0.0.1:8000/api/auth/appointments/${id}`, {
+        await axios.delete(`http://127.0.0.1:8000/api/auth/appointments/${appointmentToCancel.value}`, {
             headers: { Authorization: `Bearer ${authStore.token}` }
         });
-        fetchAppointments();
+
+        // Show success message with SweetAlert
+        Swal.fire({
+            title: "Canceled!",
+            text: "Your appointment has been canceled.",
+            icon: "success",
+            timer: 2000,  // Auto close after 2 seconds
+            showConfirmButton: false
+        });
+
+        fetchAppointments(); // Refresh the list
     } catch (error) {
         console.error(error);
+        Swal.fire({
+            title: "Error!",
+            text: "Failed to cancel the appointment. Please try again.",
+            icon: "error"
+        });
     }
 };
+
 
 const logout = () => {
     authStore.logout();
@@ -174,13 +236,11 @@ onMounted(fetchAppointments);
 </script>
 
 
-<!-- <style scoped>
+<style scoped>
 .navbar {
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa !important;  /* Light Gray */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional Shadow */
 }
-.container {
-    max-width: 900px;
-    margin: auto;
-}
-</style> -->
+</style>
+
 
