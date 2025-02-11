@@ -60,7 +60,8 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Date & Time</label>
-                                <input v-model="datetime" type="datetime-local" class="form-control" required>
+                                <input v-model="datetime" type="datetime-local" class="form-control" required :min="minDate">
+
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Guest Emails (comma-separated)</label>
@@ -122,7 +123,6 @@ const router = useRouter();
 const showModal = ref(false);
 const title = ref('');
 const description = ref('');
-const datetime = ref('');
 const guests = ref('');
 const appointments = ref([]);
 
@@ -139,6 +139,10 @@ const timezones = ref([
     "Asia/Kolkata",
     "Australia/Sydney"
 ]);
+
+const datetime = ref("");
+const minDate = ref(new Date().toISOString().slice(0, 16)); 
+
 
 const fetchAppointments = async () => {
     try {
@@ -167,9 +171,10 @@ const bookAppointment = async () => {
             { headers: { Authorization: `Bearer ${authStore.token}` } }
         );
         showModal.value = false;
+        Swal.fire("Success!", "Appointment booked successfully!", "success");
         fetchAppointments();
     } catch (error) {
-        console.error(error);
+        Swal.fire("Error", error.response.data.error || "Something went wrong!", "error");
     }
 };
 
@@ -211,7 +216,7 @@ const cancelAppointment = async () => {
             showConfirmButton: false
         });
 
-        fetchAppointments(); // Refresh the list
+        fetchAppointments(); 
     } catch (error) {
         console.error(error);
         Swal.fire({
@@ -238,8 +243,8 @@ onMounted(fetchAppointments);
 
 <style scoped>
 .navbar {
-    background-color: #f8f9fa !important;  /* Light Gray */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional Shadow */
+    background-color: #f8f9fa !important;  
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
 }
 </style>
 
